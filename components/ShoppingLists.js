@@ -21,6 +21,11 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
     const [item1, setItem1] = useState("");
     const [item2, setItem2] = useState("");
 
+    const loadCachedLists = async () => {
+        const cachedLists = await AsyncStorage.getItem("shopping_lists") || []; // logical OR assignment operator. Will assign empty array to cachedLists
+        setLists(JSON.parse(cachedLists));
+    }
+
     useEffect(() => {
         const q = query(collection(db, "shoppinglists"), where("uid", "==", userID));
         const unsubShoppinglists = onSnapshot(q, (documentsSnapshot) => {
