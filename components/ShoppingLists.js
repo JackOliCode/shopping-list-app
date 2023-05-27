@@ -22,16 +22,12 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
 
     useEffect(() => {
         const q = query(collection(db, "shoppinglists"), where("uid", "==", userID));
-        const unsubShoppinglist = onSnapshot(q, async  (documentsSnapshot) => {
+        const unsubShoppinglist = onSnapshot(q, (documentsSnapshot) => {
             let newLists = [];
             documentsSnapshot.forEach(doc => {
                 newLists.push({ id: doc.id, ...doc.data() })
             });
-            try {
-                await AsyncStorage.setItem('shopping_lists', JSON.stringify(newLists));
-            } catch (error) {
-                console.log(error.message);
-            }
+            cacheShoppingLists(newLists)
             setLists(newLists);
           });
 
@@ -40,6 +36,14 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
                 if (unsubShoppinglists) unsubShoppinglists();
             }
             }, []);
+
+            const cacheShoppingLists = async (listsToCache) => {
+                try {
+                  await AsyncStorage.setItem('shopping_lists', JSON.stringify(listsToCache));
+                } catch (error) {
+                  console.log(error.message);
+                }
+              }
 
     const addShoppingList = async (newList) => {
         const newListRef = await addDoc(collection( db, "shoppinglists"), newList);
