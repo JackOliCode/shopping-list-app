@@ -11,7 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNetInfo }from '@react-native-community/netinfo'; // useNetInfo() isnâ€™t a regular functionâ€”it works like a React Hook (e.g., useState, useEffect).
 
 
-const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ€™s passed to the component.
+const ShoppingLists = ({ db, route, isConnected }) => { // destructure the props object thatâ€™s passed to the component.
 
     const { userID } = route.params;
 
@@ -26,9 +26,21 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
         setLists(JSON.parse(cachedLists));
     }
 
+    // useEffect starts here
+
+    let unsubShoppinglists;
+
     useEffect(() => {
+
+        if (isConnected === true) {
+
+            // unregister current onSnapshot() listener to avoid registering multiple listeners when
+            // useEffect code is re-executed.
+            if (unsubShoppinglists) unsubShoppinglists();
+            unsubShoppinglists = null;
+
         const q = query(collection(db, "shoppinglists"), where("uid", "==", userID));
-        const unsubShoppinglists = onSnapshot(q, (documentsSnapshot) => {
+            unsubShoppinglists = onSnapshot(q, (documentsSnapshot) => {
             let newLists = [];
             documentsSnapshot.forEach(doc => {
                 newLists.push({ id: doc.id, ...doc.data() })
@@ -36,12 +48,13 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
             cacheShoppingLists(newLists)
             setLists(newLists);
           });
+        } else loadCachedLists();
 
         // Clean up code
             return () => {
                 if (unsubShoppinglists) unsubShoppinglists();
             }
-            }, []);
+            }, [isConnected]);
 
             //-- Code for cacheing shopping lists - called on onSnapshot callback
             const cacheShoppingLists = async (listsToCache) => {
@@ -77,6 +90,7 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
                           </View>
                         }
                       />
+                      {(isConnected === true ) ?
                       <View style={styles.listForm}>
                         <TextInput
                           style={styles.listName}
@@ -109,7 +123,8 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
                         >
                         <Text style={styles.addButtonText}>Add</Text>
                         </TouchableOpacity>
-                      </View>
+                      </View> : null
+                      }
                       {Platform.OS === "ios" ? <KeyboardAvoidingView behavior="padding" /> : null}
                     </View>
                   )
