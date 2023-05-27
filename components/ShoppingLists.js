@@ -22,11 +22,16 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
 
     useEffect(() => {
         const q = query(collection(db, "shoppinglists"), where("uid", "==", userID));
-        const unsubShoppinglist = onSnapshot(q, (documentsSnapshot) => {
+        const unsubShoppinglist = onSnapshot(q, async  (documentsSnapshot) => {
             let newLists = [];
             documentsSnapshot.forEach(doc => {
                 newLists.push({ id: doc.id, ...doc.data() })
             });
+            try {
+                await AsyncStorage.setItem('shopping_lists', JSON.stringify(newLists));
+            } catch (error) {
+                console.log(error.message);
+            }
             setLists(newLists);
           });
 
