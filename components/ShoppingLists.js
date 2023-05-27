@@ -8,6 +8,7 @@ import {
 import { useState, useEffect } from "react";
 import { collection, getDocs, addDoc, onSnapshot, query, where } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNetInfo }from '@react-native-community/netinfo'; // useNetInfo() isnâ€™t a regular functionâ€”it works like a React Hook (e.g., useState, useEffect).
 
 
 const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ€™s passed to the component.
@@ -22,7 +23,7 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
 
     useEffect(() => {
         const q = query(collection(db, "shoppinglists"), where("uid", "==", userID));
-        const unsubShoppinglist = onSnapshot(q, (documentsSnapshot) => {
+        const unsubShoppinglists = onSnapshot(q, (documentsSnapshot) => {
             let newLists = [];
             documentsSnapshot.forEach(doc => {
                 newLists.push({ id: doc.id, ...doc.data() })
@@ -37,6 +38,7 @@ const ShoppingLists = ({ db, route }) => { // destructure the props object thatâ
             }
             }, []);
 
+            //-- Code for cacheing shopping lists - called on onSnapshot callback
             const cacheShoppingLists = async (listsToCache) => {
                 try {
                   await AsyncStorage.setItem('shopping_lists', JSON.stringify(listsToCache));
